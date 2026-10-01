@@ -6,29 +6,47 @@
 
 Всегда с маленькой буквы, camelCase если из нескольких слов.
 
-- ✅ `auth`, `userProfile`, `shoppingCart`
-- ❌ `Auth`, `user-profile`, `UserProfile`
+- ✅ `auth`, `customers`, `orderHistory`
+- ❌ `Auth`, `order-history`, `OrderHistory`
+
+## Файлы и папки внутри `app/`
+
+Имена здесь задаёт файловый роутинг (см. `architecture.md`), поэтому
+правило "имя файла = имя экспорта" на `app/` не распространяется.
+
+- Файл страницы — всегда `page.tsx`, экспорт — `Page`.
+- Файл обёртки — всегда `layout.tsx`, экспорт — `Layout`.
+- Папка-сегмент URL — в нижнем регистре, kebab-case, если слов
+  несколько: `customers`, `order-history`.
+- Группа маршрутов — в круглых скобках: `(auth)`, `(protected)`.
+- Динамический сегмент — в квадратных скобках, внутри camelCase:
+  `[customerId]`, `[orderId]`.
+
+- ✅ `app/(protected)/customers/[customerId]/page.tsx` →
+  `export const Page`
+- ❌ `CustomerPage.tsx`, `customers/index.tsx`, `[customer-id]/`,
+  `export default function Page()`
 
 ## Файлы внутри `model/`
 
-Паттерн `<moduleName><Suffix>.ts`:
+Типовые файлы называются одним словом с маленькой буквы — модуль и так
+ясен из пути:
 
-- ✅ `authApi.ts`, `authTypes.ts`, `authConstants.ts`, `authSchema.ts`,
-  `authStore.ts`
-- ❌ `api.ts` (если в папке есть другие похожие файлы и без имени
-  модуля неясно, о чём файл), `Auth-Api.ts`, `authapi.ts`
+- ✅ `types.ts`, `constants.ts`, `schema.ts`, `mocks.ts`, `mappers.ts`
+- ❌ `authTypes.ts`, `authConstants.ts`, `authSchema.ts`
 
-Исключение: если у файла типовое общее имя без привязки к конкретному
-модулю (контекст и так ясен из пути — например единственный файл
-такого назначения в `model/`) — допустимо называть его одним словом с
-маленькой буквы: `types.ts`, `constants.ts`, `schema.ts`.
+Файл запросов и стор — с именем модуля, паттерн
+`<moduleName><Suffix>.ts`:
+
+- ✅ `authApi.ts`, `customersApi.ts`, `ordersStore.ts`
+- ❌ `api.ts`, `store.ts`, `Auth-Api.ts`, `authapi.ts`
 
 ## Файлы внутри `viewModel/`
 
 Жёсткого паттерна нет — называются по смыслу того, что они делают,
 camelCase:
 
-- ✅ `useAuth.ts`, `useLoginForm.ts`, `useTodoFilters.ts`
+- ✅ `useLoginForm.ts`, `useCustomersList.ts`, `useOrderFilters.ts`
 - ❌ `hook1.ts`, `logic.ts`, `AuthViewModel.ts`
 
 ## Экраны и компоненты (`view/screens/*`, `view/components/*`)

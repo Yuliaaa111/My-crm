@@ -34,15 +34,16 @@ import { useMemo } from "react";
 import { create } from "zustand";
 
 import type { AppThemeType } from "@/core/types";
-import { useAuthStore } from "@/modules/auth/public";
-import type { LoginScreenProps } from "./types";
+import { Button } from "@/core/ui/Button/Button";
+import type { CustomerType } from "@/modules/customers/public";
+import { useOrdersList } from "../../../viewModel/useOrdersList";
 
-import { useStyles } from "./LoginScreen.styles";
+import { useStyles } from "./OrdersListScreen.styles";
 ```
 
 ```ts
 // ❌ смешаны блоки, стили не последними, нет пустых строк между группами
-import { useStyles } from "./LoginScreen.styles";
+import { useStyles } from "./OrdersListScreen.styles";
 import { useMemo } from "react";
 import type { AppThemeType } from "@/core/types";
 import { create } from "zustand";
@@ -64,3 +65,8 @@ import { create } from "zustand";
   // ❌
   export default function formatDate(date) { ... }
   ```
+
+- Единственное исключение — файлы конфигурации в корне проекта
+  (`vite.config.ts`, `eslint.config.ts` и подобные): инструменты
+  требуют от них `export default`. На файлы внутри `src/` исключение не
+  распространяется, включая `page.tsx` и `layout.tsx` в `app/`.

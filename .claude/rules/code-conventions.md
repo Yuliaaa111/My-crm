@@ -11,7 +11,7 @@
 
   ```ts
   // ✅
-  const calculateTotalPrice = (items: CartItemType[]): number => { ... };
+  const calculateTotalPrice = (items: OrderItemType[]): number => { ... };
 
   // ❌
   function calculateTotalPrice(items) { ... }
@@ -70,22 +70,42 @@
   // ❌ IUser, TUser
   ```
 
-- **`any` запрещён** (и `as any`). Если тип неизвестен заранее —
-  `unknown` с последующей проверкой, либо дженерики, либо конкретный
-  union/`type`. Если типизация не выводится сама и компилятор ругается
-  без явного указания типа — писать явную типизацию через дженерики
-  (`useState<User | null>(null)`, `array.map<ResultType>(...)`); если
+- **`any` запрещён.** Если тип неизвестен заранее — `unknown` с
+  последующей проверкой, либо дженерики, либо конкретный union/`type`.
+  Если типизация не выводится сама и компилятор ругается без явного
+  указания типа — писать явную типизацию через дженерики
+  (`useState<UserType | null>(null)`, `array.map<ResultType>(...)`); если
   TypeScript и так корректно выводит тип — не дублировать аннотацией без
   необходимости.
+- **`unknown` разрешён, но только с проверкой.** Значение типа
+  `unknown` (ошибка в `catch`, результат `JSON.parse`, данные из
+  `localStorage`) перед использованием сужается: через `typeof`,
+  `instanceof`, `in`, функцию-предикат (`value is UserType`) или
+  zod-схему (`schema.safeParse`).
+- **`as` запрещён полностью** — любые приведения типов, включая
+  `as const`, `as unknown as ...` и запись `<Type>value`. Вместо
+  приведения — проверка (см. пункт про `unknown`), дженерик или явная
+  аннотация типа. Для констант вместо `as const` — явный тип.
+
+  ```ts
+  // ✅
+  const ORDER_STATUSES: readonly OrderStatusType[] = ["new", "paid", "shipped"];
+
+  // ❌
+  const ORDER_STATUSES = ["new", "paid", "shipped"] as const;
+  const user = response as UserType;
+  ```
+
 - **`satisfies` не использовать.** Вместо него — явная типизация через
   дженерики/аннотацию типа там, где нужна проверка соответствия.
 - Пропсы компонента — `<ComponentName>Props` (`LoginScreenProps`,
   `ButtonProps`).
 - Тип ответа API — `<Module>Response` (`AuthResponse`), тип запроса —
   `<Module>Request` (`AuthRequest`). Единый вариант для всего проекта,
-  `Dto`/`Payload` и подобные — не использовать.
+  `Dto`/`Payload` и подобные — не использовать. Типы пишутся вручную в
+  `model/types.ts` модуля — генерации из схемы бэкенда в проекте нет.
 - Для типов без предметного суффикса (`Props`/`Response`/`Request`) —
-  суффикс `Type`: `StatusType`, `ThemeModeType`, `ModalNameType`. Если
+  суффикс `Type`: `StatusType`, `ThemeModeType`, `OrderStatusType`. Если
   для типа уже есть свой предметный суффикс — используется он, не
   `Type` (не `LoginScreenPropsType`, а `LoginScreenProps`).
 - Union-типы вместо enum везде, где возможно. `enum` в проекте не
