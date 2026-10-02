@@ -6,18 +6,23 @@
 
 My CRM — упрощённая CRM на React 19 + Vite + TypeScript: вход, сводка, клиенты, товары, заказы. Корзины, оплаты и доставки нет. Бэкенда нет — все данные на моках.
 
-Проект в самом начале: в `src/` пока лежит стандартный шаблон Vite (`App.tsx`, `main.tsx`), описанная ниже структура ещё не создана. Новый код пишется сразу по этой архитектуре.
+Код пишется по этапам: план и его состояние — в `.claude/plans/crm-implementation.md`. Часть модулей может быть ещё не реализована — их страницы показывают заглушку.
 
 ## Команды
 
 ```bash
-npm run dev      # запустить dev-сервер Vite
-npm run build    # tsc -b && vite build
-npm run lint     # eslint .
-npm run preview  # посмотреть собранную версию
+npm run dev           # запустить dev-сервер Vite
+npm run build         # tsc -b && vite build
+npm run preview       # посмотреть собранную версию
+npm run typecheck     # tsc -b
+npm run lint          # eslint .
+npm run lint:fix      # eslint . --fix
+npm run format        # prettier . --check
+npm run format:write  # prettier . --write
+npm run fix           # lint:fix + format:write
 ```
 
-Других скриптов в `package.json` пока нет. Тест-раннер не настроен (нет ни test-скрипта, ни тестовых файлов).
+Тест-раннер пока не настроен (появится на последнем этапе плана). Stop-хук `.claude/hooks/enforce-typecheck.sh` запускает `npm run typecheck` перед завершением ответа.
 
 ## Архитектура
 
@@ -36,11 +41,11 @@ src/
 
 ### Где Model, ViewModel и View
 
-| Слой      | Папка модуля | Что содержит                                                                                |
-| --------- | ------------ | ------------------------------------------------------------------------------------------- |
+| Слой      | Папка модуля | Что содержит                                                                                    |
+| --------- | ------------ | ----------------------------------------------------------------------------------------------- |
 | Model     | `model/`     | `types.ts`, `constants.ts`, `schema.ts` (zod), `mocks.ts`, `<module>Api.ts`, `<module>Store.ts` |
-| ViewModel | `viewModel/` | хуки: вызывают запросы и сторы, держат состояние экрана, формы и обработчики; без JSX       |
-| View      | `view/`      | `screens/` и `components/`: рендерят то, что вернул хук; без прямых запросов и сторов       |
+| ViewModel | `viewModel/` | хуки: вызывают запросы и сторы, держат состояние экрана, формы и обработчики; без JSX           |
+| View      | `view/`      | `screens/` и `components/`: рендерят то, что вернул хук; без прямых запросов и сторов           |
 
 Зависимости идут в одну сторону: `view → viewModel → model`.
 
@@ -67,27 +72,29 @@ src/
 
 ### Тема и стили
 
-- Стили — на Emotion: рядом с компонентом лежит `<Name>.styles.ts` с функцией `styles(theme, ...)` и хуком `useStyles`, созданным через `stylesConfiguratorHook` из `core/styles/`.
-- Тема светлая/тёмная: режим хранится в `core/stores/themeStore.ts` (zustand + `persist`), `core/providers/ThemeProviderManager.tsx` передаёт тему в Emotion.
+- Стили — на `@emotion/css`: рядом с компонентом лежит `<Name>.styles.ts` с функцией `styles(theme, ...)` и хуком `useStyles`, созданным через `stylesConfiguratorHook` из `core/styles/`. В компоненте: `const styles = useStyles(); <div className={css(styles.root)} />`.
+- Тема светлая/тёмная: режим хранится в `core/stores/themeStore.ts` (zustand + `persist`), `core/providers/ThemeProviderManager.tsx` собирает тему и отдаёт её через собственный React-контекст; читается хуком `useAppTheme` из `core/hooks/`. `@emotion/react` не используется.
 
 ## Ключевые правила кода
 
 - Только `type`, без `interface` и `enum`.
-- `any` и `satisfies` запрещены. `as` запрещён полностью, включая `as const` — для констант используется явный тип.
+- `any` и `satisfies` запрещены.
+- `as const` разрешён. Обычный `as` — только там, где тип известен точно, а TypeScript не может его вывести, и обязательно с комментарием рядом, почему это безопасно. `as any`, `as unknown as X` и `as` ради того, чтобы заглушить ошибку типов, запрещены. Где возможно — zod или type guard вместо `as`.
 - `unknown` разрешён только с последующей проверкой типа.
 - Только именованные экспорты. `export default` — исключительно в конфигах в корне проекта.
 - Формы — `react-hook-form`, валидация — `zod`.
 
-## Ещё не настроено
+## Линтер и форматирование
 
-Правила ниже описаны в `.claude/rules/`, но в проекте пока не работают. Это отдельная задача через скилл `setup-tooling`, в таком порядке:
+`eslint.config.ts` проверяет правила проекта автоматически:
 
-1. `.env` не добавлен в `.gitignore`, файла `.env.example` нет.
-2. Нет скрипта `typecheck`. Stop-хук `enforce-typecheck.sh` из-за этого запускает `tsc --noEmit`, который при текущем `tsconfig.json` не проверяет ни одного файла из `src/`.
-3. Линтер — стандартный из шаблона Vite (`eslint.config.js`): запреты на `as`, `any`, `interface`, порядок импортов и неиспользуемые импорты не проверяются. Prettier, husky и lint-staged не установлены.
-4. Алиас `@/` не настроен ни в tsconfig, ни в `vite.config.ts`.
+- запрещённый синтаксис: `any`, `interface`, `enum`, `satisfies`, двойное приведение типов, `<Type>value`; внутри `src/` — ещё и `export default`;
+- `local/commented-type-assertion` — собственное правило: обычный `as` без комментария на той же или предыдущей строке — ошибка;
+- порядок импортов (`simple-import-sort`): пакеты → `@/` и относительные → стили;
+- неиспользуемые импорты — ошибка; неиспользуемые переменные — предупреждение, если имя не начинается с `_`;
+- форматирование Prettier — как ошибка линтера.
 
-Библиотеки, на которые опирается архитектура, тоже ещё не установлены: `react-router-dom`, `zustand`, `@emotion/react`, `react-hook-form`, `zod`. Перед установкой и использованием сверяться с документацией актуальной версии (см. `package-docs-verification.md`).
+Папка `.claude/` линтером не проверяется. Вместо `eslint-plugin-import` стоит `eslint-plugin-import-x`, `eslint-plugin-react` не установлен — оба оригинальных плагина не поддерживают ESLint 10.
 
 ## Git-флоу
 

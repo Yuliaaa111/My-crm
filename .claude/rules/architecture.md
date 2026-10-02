@@ -50,6 +50,7 @@ src/
 ├── app/                  # файловый роутинг (file-based routing)
 │   ├── index.tsx         # AppRouter: собирает роуты из файлов app/
 │   ├── layout.tsx        # корневой layout: провайдеры приложения
+│   ├── not-found.tsx     # страница для несуществующих адресов
 │   ├── (auth)/           # группа маршрутов для неавторизованных пользователей
 │   │   ├── layout.tsx
 │   │   └── login/
@@ -81,10 +82,12 @@ src/
 │   ├── declarations/
 │   │   └── *.d.ts
 │   ├── hooks/
+│   │   └── useAppTheme.ts
 │   ├── types/
 │   │   └── ...
 │   ├── layouts/
 │   ├── providers/
+│   │   ├── themeContext.ts
 │   │   └── ThemeProviderManager.tsx
 │   ├── locales/
 │   │   ├── translations/
@@ -92,6 +95,7 @@ src/
 │   │   │   └── ru.json
 │   │   └── index.ts
 │   ├── routes/
+│   │   ├── buildRoutes.ts
 │   │   └── PrivateRoute.tsx
 │   ├── ui/
 │   │   ├── Button/
@@ -157,13 +161,13 @@ auth/
 
 ## Модули проекта
 
-| Модуль      | Что делает                 | Маршруты                                 |
-| ----------- | -------------------------- | ---------------------------------------- |
-| `auth`      | вход в систему             | `/login`                                 |
-| `dashboard` | сводка и статистика        | `/`                                      |
-| `customers` | клиенты                    | `/customers`, `/customers/:customerId`   |
-| `products`  | товары                     | `/products`, `/products/:productId`      |
-| `orders`    | заказы                     | `/orders`, `/orders/:orderId`            |
+| Модуль      | Что делает          | Маршруты                               |
+| ----------- | ------------------- | -------------------------------------- |
+| `auth`      | вход в систему      | `/login`                               |
+| `dashboard` | сводка и статистика | `/`                                    |
+| `customers` | клиенты             | `/customers`, `/customers/:customerId` |
+| `products`  | товары              | `/products`, `/products/:productId`    |
+| `orders`    | заказы              | `/orders`, `/orders/:orderId`          |
 
 - В `auth` только вход: регистрации и восстановления пароля нет.
 - Корзина, оплата и доставка в проект не входят.
@@ -184,11 +188,13 @@ Router:
 - Папка в квадратных скобках (`[customerId]`) — динамический сегмент
   (`:customerId`).
 - Обычная папка — сегмент URL с тем же именем.
+- `not-found.tsx` в корне `app/` — страница для адресов, которым не
+  соответствует ни один маршрут. Экспортирует `NotFound`.
 
 Роутинг строится строго на `react-router-dom`, без сторонних
 роутер-библиотек и плагинов. `app/index.tsx` находит файлы `page.tsx` и
-`layout.tsx` через `import.meta.glob` и собирает из них дерево
-маршрутов. Точный API `react-router-dom` сверяется с документацией
+`layout.tsx` через `import.meta.glob` и передаёт их в
+`core/routes/buildRoutes.ts`, который собирает из них дерево маршрутов. Точный API `react-router-dom` сверяется с документацией
 установленной версии (см. `package-docs-verification.md`).
 
 `page.tsx` — тонкая обёртка: импортирует экран из
@@ -266,13 +272,15 @@ Router:
   ниже).
 - `layouts/` — обёртки-раскладки страниц (например `AppLayout` с
   навигацией для защищённых маршрутов).
-- `providers/` — контекст-провайдеры (например `ThemeProviderManager`,
-  оборачивающий `EmotionThemeProvider` — см. раздел про стилизацию).
+- `providers/` — контекст-провайдеры и их контексты (например
+  `ThemeProviderManager` и `themeContext.ts` — см. раздел про
+  стилизацию).
 - `locales/` — интернационализация: `translations/en.json`,
   `translations/ru.json` и т.д., `index.ts` — точка инициализации i18n.
   Заводится, только когда в проекте появится перевод интерфейса.
-- `routes/` — общая логика роутинга: `PrivateRoute.tsx` (см.
-  "Авторизация и сессия").
+- `routes/` — общая логика роутинга: `buildRoutes.ts` (сборка дерева
+  маршрутов из файлов `app/`) и `PrivateRoute.tsx` (см. "Авторизация и
+  сессия").
 - `ui/` — переиспользуемые UI-компоненты дизайн-системы, каждый в
   своей папке по тому же принципу, что и `view/components/` модулей
   (`Button/Button.tsx` + `Button.styles.ts`, именованный экспорт
@@ -333,7 +341,7 @@ Router:
 
 ## Стилизация
 
-Стилизация построена на `@emotion/react` по единому паттерну, других
+Стилизация построена на `@emotion/css` по единому паттерну, других
 подходов (styled-components, CSS-модули, Tailwind и т.п.) в проекте не
 использовать:
 
@@ -343,8 +351,13 @@ Router:
   `stylesConfiguratorHook(styles)` из
   `core/styles/stylesConfiguratorHook.ts`.
 - `stylesConfiguratorHook` — единая фабрика хуков стилей: берёт тему
-  через `useTheme()` из `@emotion/react` и мемоизирует результат
+  через `useAppTheme()` из `core/hooks/` и мемоизирует результат
   `styles(theme, ...args)` через `useMemo`.
+- В компоненте стили превращаются в класс функцией `css()` из
+  `@emotion/css`: `<div className={css(styles.root)} />`.
+- `@emotion/react` не используется: его `useTheme()` можно
+  типизировать только через `interface`, а `interface` в проекте
+  запрещён. Тема передаётся через собственный React-контекст.
 - Типы для системы стилей (`AppThemeType`, `StyleArgumentType`,
   `StyleConfigType`, `AppColorsType`, `ThemeModeType`) лежат в
   `core/types`, названы с суффиксом `Type` согласно `code-conventions.md`.
@@ -356,8 +369,10 @@ Router:
   пользователя сохраняется между перезагрузками.
 - Цвета обеих тем лежат в `core/constants/colors.ts`.
 - `core/providers/ThemeProviderManager.tsx` читает режим из
-  `themeStore`, собирает объект темы и передаёт его в
-  `EmotionThemeProvider`. Подключается в корневом `app/layout.tsx`.
+  `themeStore`, собирает объект темы (`AppThemeType`) и отдаёт его
+  через контекст из `core/providers/themeContext.ts`. Подключается в
+  корневом `app/layout.tsx`.
+- Тему читает хук `useAppTheme` из `core/hooks/`.
 - Компоненты не читают `themeStore` ради цветов — цвета приходят
   только через `useStyles`. `themeStore` нужен напрямую только
   переключателю темы.

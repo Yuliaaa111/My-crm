@@ -82,18 +82,35 @@
   `localStorage`) перед использованием сужается: через `typeof`,
   `instanceof`, `in`, функцию-предикат (`value is UserType`) или
   zod-схему (`schema.safeParse`).
-- **`as` запрещён полностью** — любые приведения типов, включая
-  `as const`, `as unknown as ...` и запись `<Type>value`. Вместо
-  приведения — проверка (см. пункт про `unknown`), дженерик или явная
-  аннотация типа. Для констант вместо `as const` — явный тип.
+- **`as` — только осознанно.** Где возможно, вместо приведения типа
+  используется проверка: zod-схема или type guard (см. пункт про
+  `unknown`), дженерик, явная аннотация типа.
+  - `as const` разрешён.
+  - Обычный `as` разрешён только там, где тип известен точно, а
+    TypeScript не может его вывести. Рядом обязателен комментарий,
+    почему это безопасно — на той же строке или строкой выше.
+  - Запрещены бездумные приведения: `as any`, двойное
+    `as unknown as X` и любой `as`, которым просто заглушают ошибку
+    типов. Запись `<Type>value` не используется.
+
+  Линтер проверяет наличие комментария, запрет `as any` и двойного
+  приведения. Осмысленность комментария и самого приведения — на
+  ревью.
 
   ```ts
   // ✅
-  const ORDER_STATUSES: readonly OrderStatusType[] = ["new", "paid", "shipped"];
+  const ORDER_STATUSES = ["new", "paid", "shipped"] as const;
+
+  const parsedUser = userSchema.safeParse(response);
+
+  // Object.keys returns string[], but the keys of this object literal
+  // are exactly OrderStatusType
+  const statuses = Object.keys(STATUS_LABELS) as OrderStatusType[];
 
   // ❌
-  const ORDER_STATUSES = ["new", "paid", "shipped"] as const;
   const user = response as UserType;
+  const user = response as unknown as UserType;
+  const user = response as any;
   ```
 
 - **`satisfies` не использовать.** Вместо него — явная типизация через

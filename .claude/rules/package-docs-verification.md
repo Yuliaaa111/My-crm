@@ -10,7 +10,7 @@
 ## Не выдумывать API
 
 При написании или изменении кода, который использует внешний пакет
-(`react-hook-form`, `zod`, `zustand`, `@emotion/react`,
+(`react-hook-form`, `zod`, `zustand`, `@emotion/css`,
 `react-router-dom`, `vite`, ESLint/Prettier плагины, TypeScript, и
 любой другой пакет из `package.json` проекта или новый, который
 предстоит добавить) — нельзя полагаться только на память тренировочных
