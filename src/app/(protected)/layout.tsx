@@ -1,9 +1,12 @@
 import { Outlet } from "react-router-dom";
 
 import { AppLayout } from "@/core/layouts/AppLayout/AppLayout";
+import { PrivateRoute } from "@/core/routes/PrivateRoute";
 
 export const Layout = () => (
-  <AppLayout>
-    <Outlet />
-  </AppLayout>
+  <PrivateRoute>
+    <AppLayout>
+      <Outlet />
+    </AppLayout>
+  </PrivateRoute>
 );

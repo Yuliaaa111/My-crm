@@ -96,6 +96,7 @@ src/
 │   │   └── index.ts
 │   ├── routes/
 │   │   ├── buildRoutes.ts
+│   │   ├── GuestRoute.tsx
 │   │   └── PrivateRoute.tsx
 │   ├── ui/
 │   │   ├── Button/
@@ -279,8 +280,8 @@ Router:
   `translations/ru.json` и т.д., `index.ts` — точка инициализации i18n.
   Заводится, только когда в проекте появится перевод интерфейса.
 - `routes/` — общая логика роутинга: `buildRoutes.ts` (сборка дерева
-  маршрутов из файлов `app/`) и `PrivateRoute.tsx` (см. "Авторизация и
-  сессия").
+  маршрутов из файлов `app/`), `PrivateRoute.tsx` и `GuestRoute.tsx`
+  (см. "Авторизация и сессия").
 - `ui/` — переиспользуемые UI-компоненты дизайн-системы, каждый в
   своей папке по тому же принципу, что и `view/components/` модулей
   (`Button/Button.tsx` + `Button.styles.ts`, именованный экспорт
@@ -331,10 +332,15 @@ Router:
   `modules/auth/viewModel/` после успешного входа кладёт результат в
   `sessionStore`.
 - **Проверка.** `core/routes/PrivateRoute.tsx` используется в
-  `app/(protected)/layout.tsx`. Он читает токен из `sessionStore` и
-  проверяет срок действия `exp` через `core/utils/jwt.ts`. Если токена
-  нет — редирект на `/login`. Если срок истёк — `logout` и редирект на
-  `/login`.
+  `app/(protected)/layout.tsx`. Если токена в `sessionStore` нет —
+  редирект на `/login`. Срок действия `exp` проверяется через
+  `core/utils/jwt.ts` в трёх точках: при восстановлении сессии из
+  хранилища (в самом `sessionStore`), при каждом переходе между
+  защищёнными страницами и по таймеру в момент истечения. Во всех
+  случаях истёкший токен приводит к `logout` и редиректу на `/login`.
+- **Гостевые маршруты.** `core/routes/GuestRoute.tsx` используется в
+  `app/(auth)/layout.tsx`: вошедшего пользователя с `/login`
+  перенаправляет на `/`.
 - **Разбор токена.** Полезная нагрузка токена после разбора имеет тип
   `unknown` и проверяется zod-схемой; `as` не используется (см.
   `code-conventions.md`).

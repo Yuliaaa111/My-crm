@@ -153,20 +153,20 @@ Vite 8 и ESLint 10 проверена по `peerDependencies`.
 
 ## Этап 2. JWT-авторизация — `feature/auth`
 
-- [ ] Установить `react-hook-form`, `zod`, `@hookform/resolvers`
-- [ ] `core/api/mockRequest.ts` — имитация запроса с задержкой и ошибкой
-- [ ] `core/utils/jwt.ts` — сборка токена, разбор с проверкой zod-схемой,
+- [x] Установить `react-hook-form`, `zod`, `@hookform/resolvers`
+- [x] `core/api/mockRequest.ts` — имитация запроса с задержкой и ошибкой
+- [x] `core/utils/jwt.ts` — сборка токена, разбор с проверкой zod-схемой,
       проверка срока `exp`
-- [ ] `core/stores/sessionStore.ts` (с `persist`): токен, пользователь,
+- [x] `core/stores/sessionStore.ts` (с `persist`): токен, пользователь,
       вход в сессию, `logout`
-- [ ] `core/routes/PrivateRoute.tsx`: нет токена → `/login`; срок истёк →
+- [x] `core/routes/PrivateRoute.tsx`: нет токена → `/login`; срок истёк →
       `logout` и `/login`; подключить в `(protected)/layout.tsx`
-- [ ] `core/ui`: `Input`, `FormField`
-- [ ] `modules/auth`: `types.ts`, `schema.ts`, `constants.ts`, `mocks.ts`
+- [x] `core/ui`: `Input`, `FormField`
+- [x] `modules/auth`: `types.ts`, `schema.ts`, `constants.ts`, `mocks.ts`
       (демо-пользователь), `authApi.ts`, `useLoginForm.ts`, `LoginForm`,
       `LoginScreen`, `public/index.ts`
-- [ ] Шапка: имя пользователя и кнопка выхода
-- [ ] Вошедшего пользователя с `/login` перенаправлять на `/`
+- [x] Шапка: имя пользователя и кнопка выхода
+- [x] Вошедшего пользователя с `/login` перенаправлять на `/`
 
 Результат: без входа открывается только `/login`; после входа — всё
 остальное; по истечении срока токена происходит выход. Срок действия
