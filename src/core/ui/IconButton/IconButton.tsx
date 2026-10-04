@@ -1,15 +1,21 @@
 import { css } from "@emotion/css";
-import type { ReactNode } from "react";
+import type { MouseEvent, ReactNode } from "react";
 
 import { useStyles } from "./IconButton.styles";
 
 type IconButtonProps = {
   label: string;
-  onClick: () => void;
+  onClick: (event: MouseEvent<HTMLButtonElement>) => void;
   children: ReactNode;
+  isDisabled?: boolean;
 };
 
-export const IconButton = ({ label, onClick, children }: IconButtonProps) => {
+export const IconButton = ({
+  label,
+  onClick,
+  children,
+  isDisabled = false,
+}: IconButtonProps) => {
   const styles = useStyles();
 
   return (
@@ -17,6 +23,7 @@ export const IconButton = ({ label, onClick, children }: IconButtonProps) => {
       type="button"
       className={css(styles.root)}
       onClick={onClick}
+      disabled={isDisabled}
       aria-label={label}
       title={label}
     >

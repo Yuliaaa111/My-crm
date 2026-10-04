@@ -175,17 +175,17 @@ Vite 8 и ESLint 10 проверена по `peerDependencies`.
 
 ## Этап 3. Клиенты — `feature/customers`
 
-- [ ] `core/ui`: `Table`, `Pagination`, `Select`, `Badge`, `Modal`,
+- [x] `core/ui`: `Table`, `Pagination`, `Select`, `Badge`, `Modal`,
       `ConfirmDialog`, `EmptyState`
-- [ ] `model`: типы, схема формы, моки (около 20 клиентов),
+- [x] `model`: типы, схема формы, моки (около 20 клиентов),
       `customersApi.ts` (список, один, создать, изменить, удалить),
       `customersStore.ts`
-- [ ] `viewModel`: список с поиском, фильтром по статусу и пагинацией;
+- [x] `viewModel`: список с поиском, фильтром по статусу и пагинацией;
       форма; детали
-- [ ] `view`: `CustomersListScreen` (таблица: имя, email, телефон,
+- [x] `view`: `CustomersListScreen` (таблица: имя, email, телефон,
       компания, город, статус), `CustomerForm` в модальном окне,
       `CustomerDetailsScreen`
-- [ ] Подключить экраны в `app/(protected)/customers/`
+- [x] Подключить экраны в `app/(protected)/customers/`
 
 ## Этап 4. Товары — `feature/products`
 

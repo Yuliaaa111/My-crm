@@ -1,11 +1,3 @@
-import { Card } from "@/core/ui/Card/Card";
-import { EmptyState } from "@/core/ui/EmptyState/EmptyState";
+import { CustomerDetailsScreen } from "@/modules/customers/public";
 
-export const Page = () => (
-  <Card>
-    <EmptyState
-      title="Карточка клиента"
-      description="Данные клиента появятся на этапе 3."
-    />
-  </Card>
-);
+export const Page = () => <CustomerDetailsScreen />;

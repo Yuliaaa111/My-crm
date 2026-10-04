@@ -7,6 +7,7 @@ export const styles = (theme: AppThemeType): StyleConfigType => ({
     display: "inline-flex",
     alignItems: "center",
     justifyContent: "center",
+    flexShrink: 0,
     width: CONTROL_HEIGHT,
     height: CONTROL_HEIGHT,
     padding: 0,
@@ -16,9 +17,13 @@ export const styles = (theme: AppThemeType): StyleConfigType => ({
     color: theme.colors.textSecondary,
     cursor: "pointer",
     transition: "background-color 0.15s ease, color 0.15s ease",
-    "&:hover": {
+    "&:hover:not(:disabled)": {
       backgroundColor: theme.colors.surfaceHover,
       color: theme.colors.textPrimary,
+    },
+    "&:disabled": {
+      opacity: 0.5,
+      cursor: "not-allowed",
     },
   },
 });
