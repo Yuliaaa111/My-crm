@@ -14,6 +14,7 @@ export type AppColorsType = {
   success: string;
   warning: string;
   danger: string;
+  chartSeries: string;
 };
 
 export type AppFontsType = {

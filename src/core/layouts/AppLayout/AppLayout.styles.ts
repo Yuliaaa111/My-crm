@@ -1,3 +1,4 @@
+import { COMPACT_LAYOUT_MEDIA_QUERY } from "@/core/constants/layout";
 import { stylesConfiguratorHook } from "@/core/styles/stylesConfiguratorHook";
 import type { AppThemeType, StyleConfigType } from "@/core/types";
 
@@ -18,6 +19,9 @@ export const styles = (theme: AppThemeType): StyleConfigType => ({
     flexGrow: 1,
     padding: 24,
     overflowY: "auto",
+    [COMPACT_LAYOUT_MEDIA_QUERY]: {
+      padding: 16,
+    },
   },
 });
 

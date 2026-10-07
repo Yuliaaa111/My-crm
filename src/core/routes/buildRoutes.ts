@@ -1,17 +1,18 @@
 import type { ComponentType } from "react";
 import type { RouteObject } from "react-router-dom";
 
-type RouteComponentsType = Record<string, ComponentType>;
+export type PageLoaderType = () => Promise<ComponentType>;
 
 type BuildRoutesParamsType = {
-  pages: RouteComponentsType;
-  layouts: RouteComponentsType;
+  pageLoaders: Record<string, PageLoaderType>;
+  layouts: Record<string, ComponentType>;
   NotFound: ComponentType;
+  PageFallback: ComponentType;
 };
 
 type RouteNodeType = {
   segment: string;
-  Page?: ComponentType;
+  loadPage?: PageLoaderType;
   Layout?: ComponentType;
   children: Map<string, RouteNodeType>;
 };
@@ -62,8 +63,11 @@ const toRouteObject = (
   node: RouteNodeType,
   extraChildRoutes: RouteObject[] = [],
 ): RouteObject => {
-  const indexRoutes: RouteObject[] = node.Page
-    ? [{ index: true, Component: node.Page }]
+  // Pages are loaded on demand, so each page becomes its own chunk;
+  // layouts stay in the main bundle because every page needs them.
+  const { loadPage } = node;
+  const indexRoutes: RouteObject[] = loadPage
+    ? [{ index: true, lazy: { Component: loadPage } }]
     : [];
   const childRoutes = [...node.children.values()].map((childNode) =>
     toRouteObject(childNode),
@@ -77,14 +81,16 @@ const toRouteObject = (
 };
 
 export const buildRoutes = ({
-  pages,
+  pageLoaders,
   layouts,
   NotFound,
+  PageFallback,
 }: BuildRoutesParamsType): RouteObject[] => {
   const rootNode = createRouteNode(ROOT_SEGMENT);
 
-  Object.entries(pages).forEach(([filePath, Page]) => {
-    findOrCreateRouteNode(rootNode, getDirectorySegments(filePath)).Page = Page;
+  Object.entries(pageLoaders).forEach(([filePath, loadPage]) => {
+    findOrCreateRouteNode(rootNode, getDirectorySegments(filePath)).loadPage =
+      loadPage;
   });
 
   Object.entries(layouts).forEach(([filePath, Layout]) => {
@@ -93,6 +99,11 @@ export const buildRoutes = ({
   });
 
   return [
-    toRouteObject(rootNode, [{ path: NOT_FOUND_PATH, Component: NotFound }]),
+    {
+      ...toRouteObject(rootNode, [
+        { path: NOT_FOUND_PATH, Component: NotFound },
+      ]),
+      HydrateFallback: PageFallback,
+    },
   ];
 };

@@ -14,6 +14,7 @@ export const LIGHT_COLORS: AppColorsType = {
   success: "#1f9d61",
   warning: "#c98a12",
   danger: "#d64545",
+  chartSeries: "#2a78d6",
 };
 
 export const DARK_COLORS: AppColorsType = {
@@ -30,6 +31,7 @@ export const DARK_COLORS: AppColorsType = {
   success: "#4cc38a",
   warning: "#e3b341",
   danger: "#f07178",
+  chartSeries: "#3987e5",
 };
 
 export const COLORS_BY_MODE: Record<ThemeModeType, AppColorsType> = {
