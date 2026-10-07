@@ -2,7 +2,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useState } from "react";
 import { useFieldArray, useForm, useWatch } from "react-hook-form";
 
-import type { SelectOptionType } from "@/core/types";
+import type { ComboboxOptionType } from "@/core/types";
 import { formatCurrency } from "@/core/utils/formatCurrency";
 import { getErrorMessage } from "@/core/utils/getErrorMessage";
 import {
@@ -32,30 +32,29 @@ import type {
 } from "../model/types";
 
 const ACTIVE_STATUS = "active";
-const NOT_SELECTED_VALUE = "";
 
 const buildCustomerOptions = (
   customers: CustomerType[],
-): SelectOptionType[] => [
-  { value: NOT_SELECTED_VALUE, label: "Выберите клиента" },
-  ...customers
+): ComboboxOptionType[] =>
+  customers
     .filter(({ status }) => status === ACTIVE_STATUS)
-    .map(({ id, firstName, lastName, company }) => ({
+    .map(({ id, firstName, lastName, company, city }) => ({
       value: id,
-      label: [`${firstName} ${lastName}`, company].filter(Boolean).join(" · "),
+      label: `${firstName} ${lastName}`,
+      description: [company, city].filter(Boolean).join(" · "),
+      searchValues: [firstName, lastName, `${firstName} ${lastName}`, company],
     }))
-    .sort((first, second) => first.label.localeCompare(second.label)),
-];
+    .sort((first, second) => first.label.localeCompare(second.label));
 
-const buildProductOptions = (products: ProductType[]): SelectOptionType[] => [
-  { value: NOT_SELECTED_VALUE, label: "Выберите товар" },
-  ...products
+const buildProductOptions = (products: ProductType[]): ComboboxOptionType[] =>
+  products
     .filter(({ status, stock }) => status === ACTIVE_STATUS && stock > 0)
-    .map(({ id, name, price, stock }) => ({
+    .map(({ id, name, sku, price, stock }) => ({
       value: id,
-      label: `${name} — ${formatCurrency(price)} · на складе ${stock} шт.`,
-    })),
-];
+      label: name,
+      description: `${sku} · ${formatCurrency(price)} · на складе ${stock} шт.`,
+      searchValues: [name, sku],
+    }));
 
 const toOrderItems = (
   formItems: OrderFormItemType[],
@@ -173,6 +172,7 @@ export const useOrderForm = (onCreated: (order: OrderType) => void) => {
 
   return {
     register,
+    control,
     errors,
     itemFields: fields,
     itemsErrorMessage: errors.items?.message ?? errors.items?.root?.message,

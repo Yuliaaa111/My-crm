@@ -1,3 +1,4 @@
+import { getCountryName } from "@/core/utils/countries";
 import { formatDate } from "@/core/utils/formatDate";
 import type { CustomerRequest, CustomerType, CustomerViewType } from "./types";
 
@@ -9,12 +10,14 @@ export const getCustomerFullName = ({
 
 export const getCustomerLocation = ({
   city,
-  country,
-}: Pick<CustomerType, "city" | "country">): string => `${city}, ${country}`;
+  countryCode,
+}: Pick<CustomerType, "city" | "countryCode">): string =>
+  `${city}, ${getCountryName(countryCode)}`;
 
 export const toCustomerView = (customer: CustomerType): CustomerViewType => ({
   ...customer,
   fullName: getCustomerFullName(customer),
+  countryName: getCountryName(customer.countryCode),
   location: getCustomerLocation(customer),
   createdAtLabel: formatDate(customer.createdAt),
 });
@@ -26,7 +29,7 @@ export const toCustomerRequest = ({
   phone,
   company,
   city,
-  country,
+  countryCode,
   status,
 }: CustomerType): CustomerRequest => ({
   firstName,
@@ -35,6 +38,6 @@ export const toCustomerRequest = ({
   phone,
   company,
   city,
-  country,
+  countryCode,
   status,
 });

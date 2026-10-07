@@ -1,6 +1,8 @@
 import { mockRequest } from "@/core/api/mockRequest";
+import { createMockTable } from "@/core/api/mockTable";
 import { CUSTOMER_NOT_FOUND_MESSAGE } from "./constants";
 import { MOCK_CUSTOMERS } from "./mocks";
+import { customerRecordSchema } from "./schema";
 import type {
   CustomerRequest,
   CustomerResponse,
@@ -8,12 +10,18 @@ import type {
   CustomerType,
 } from "./types";
 
-// In-memory stand-in for the backend table: changes live until the page
-// is reloaded, like in the original demo.
-let customersTable: CustomerType[] = [...MOCK_CUSTOMERS];
+// Stand-in for the backend table, persisted to localStorage (see
+// core/api/mockTable.ts).
+const customersTable = createMockTable({
+  tableName: "customers",
+  rowSchema: customerRecordSchema,
+  initialRows: MOCK_CUSTOMERS,
+});
 
 const findCustomerOrThrow = (customerId: string): CustomerType => {
-  const customer = customersTable.find(({ id }) => id === customerId);
+  const customer = customersTable
+    .readRows()
+    .find(({ id }) => id === customerId);
 
   if (!customer) {
     throw new Error(CUSTOMER_NOT_FOUND_MESSAGE);
@@ -23,7 +31,7 @@ const findCustomerOrThrow = (customerId: string): CustomerType => {
 };
 
 export const fetchCustomers = (): Promise<CustomersListResponse> =>
-  mockRequest(() => [...customersTable]);
+  mockRequest(() => customersTable.readRows());
 
 export const createCustomer = (
   request: CustomerRequest,
@@ -34,7 +42,7 @@ export const createCustomer = (
       id: crypto.randomUUID(),
       createdAt: new Date().toISOString(),
     };
-    customersTable = [createdCustomer, ...customersTable];
+    customersTable.writeRows([createdCustomer, ...customersTable.readRows()]);
 
     return createdCustomer;
   });
@@ -48,8 +56,12 @@ export const updateCustomer = (
       ...findCustomerOrThrow(customerId),
       ...request,
     };
-    customersTable = customersTable.map((customer) =>
-      customer.id === customerId ? updatedCustomer : customer,
+    customersTable.writeRows(
+      customersTable
+        .readRows()
+        .map((customer) =>
+          customer.id === customerId ? updatedCustomer : customer,
+        ),
     );
 
     return updatedCustomer;
@@ -58,5 +70,7 @@ export const updateCustomer = (
 export const deleteCustomer = (customerId: string): Promise<void> =>
   mockRequest(() => {
     findCustomerOrThrow(customerId);
-    customersTable = customersTable.filter(({ id }) => id !== customerId);
+    customersTable.writeRows(
+      customersTable.readRows().filter(({ id }) => id !== customerId),
+    );
   });

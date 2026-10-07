@@ -1,14 +1,15 @@
 import { css } from "@emotion/css";
 import { Plus, X } from "lucide-react";
+import { Controller } from "react-hook-form";
 
 import { ICON_SIZE } from "@/core/constants/layout";
 import { Button } from "@/core/ui/Button/Button";
+import { Combobox } from "@/core/ui/Combobox/Combobox";
 import { FormField } from "@/core/ui/FormField/FormField";
 import { IconButton } from "@/core/ui/IconButton/IconButton";
 import { Input } from "@/core/ui/Input/Input";
 import { Loader } from "@/core/ui/Loader/Loader";
 import { Modal } from "@/core/ui/Modal/Modal";
-import { Select } from "@/core/ui/Select/Select";
 import { Textarea } from "@/core/ui/Textarea/Textarea";
 import type { OrderType } from "../../../model/types";
 import { useOrderForm } from "../../../viewModel/useOrderForm";
@@ -24,6 +25,7 @@ export const OrderFormModal = ({ onClose, onCreated }: OrderFormModalProps) => {
   const styles = useStyles();
   const {
     register,
+    control,
     errors,
     itemFields,
     itemsErrorMessage,
@@ -54,11 +56,21 @@ export const OrderFormModal = ({ onClose, onCreated }: OrderFormModalProps) => {
             fieldId="order-customer"
             errorMessage={errors.customerId?.message}
           >
-            <Select
-              id="order-customer"
-              options={customerOptions}
-              hasError={Boolean(errors.customerId)}
-              {...register("customerId")}
+            <Controller
+              control={control}
+              name="customerId"
+              render={({ field }) => (
+                <Combobox
+                  id="order-customer"
+                  options={customerOptions}
+                  value={field.value}
+                  onChange={field.onChange}
+                  onBlur={field.onBlur}
+                  ref={field.ref}
+                  placeholder="Имя, фамилия или компания"
+                  hasError={Boolean(errors.customerId)}
+                />
+              )}
             />
           </FormField>
           <div>
@@ -71,11 +83,21 @@ export const OrderFormModal = ({ onClose, onCreated }: OrderFormModalProps) => {
                     fieldId={`order-item-product-${index}`}
                     errorMessage={errors.items?.[index]?.productId?.message}
                   >
-                    <Select
-                      id={`order-item-product-${index}`}
-                      options={productOptions}
-                      hasError={Boolean(errors.items?.[index]?.productId)}
-                      {...register(`items.${index}.productId`)}
+                    <Controller
+                      control={control}
+                      name={`items.${index}.productId`}
+                      render={({ field }) => (
+                        <Combobox
+                          id={`order-item-product-${index}`}
+                          options={productOptions}
+                          value={field.value}
+                          onChange={field.onChange}
+                          onBlur={field.onBlur}
+                          ref={field.ref}
+                          placeholder="Название или артикул"
+                          hasError={Boolean(errors.items?.[index]?.productId)}
+                        />
+                      )}
                     />
                   </FormField>
                   <FormField

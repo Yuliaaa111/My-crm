@@ -1,6 +1,8 @@
 import { css } from "@emotion/css";
+import { Controller } from "react-hook-form";
 
 import { Button } from "@/core/ui/Button/Button";
+import { Combobox } from "@/core/ui/Combobox/Combobox";
 import { FormField } from "@/core/ui/FormField/FormField";
 import { Input } from "@/core/ui/Input/Input";
 import { Modal } from "@/core/ui/Modal/Modal";
@@ -22,6 +24,8 @@ export const CustomerFormModal = ({
   const styles = useStyles();
   const {
     register,
+    control,
+    countryOptions,
     errors,
     isSubmitting,
     submitErrorMessage,
@@ -122,12 +126,23 @@ export const CustomerFormModal = ({
           <FormField
             label="Страна"
             fieldId="customer-country"
-            errorMessage={errors.country?.message}
+            errorMessage={errors.countryCode?.message}
           >
-            <Input
-              id="customer-country"
-              hasError={Boolean(errors.country)}
-              {...register("country")}
+            <Controller
+              control={control}
+              name="countryCode"
+              render={({ field }) => (
+                <Combobox
+                  id="customer-country"
+                  options={countryOptions}
+                  value={field.value}
+                  onChange={field.onChange}
+                  onBlur={field.onBlur}
+                  ref={field.ref}
+                  placeholder="Название или код, например RU"
+                  hasError={Boolean(errors.countryCode)}
+                />
+              )}
             />
           </FormField>
         </div>

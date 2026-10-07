@@ -9,3 +9,8 @@ export type SelectOptionType = {
   value: string;
   label: string;
 };
+
+export type ComboboxOptionType = SelectOptionType & {
+  description?: string;
+  searchValues: string[];
+};

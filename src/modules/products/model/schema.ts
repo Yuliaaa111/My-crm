@@ -7,7 +7,7 @@ import {
   PRODUCT_VALIDATION_MESSAGES,
   SKU_PATTERN,
 } from "./constants";
-import type { ProductRequest } from "./types";
+import type { ProductRequest, ProductType } from "./types";
 
 export const productSchema: z.ZodType<ProductRequest, ProductRequest> =
   z.object({
@@ -30,3 +30,16 @@ export const productSchema: z.ZodType<ProductRequest, ProductRequest> =
       .trim()
       .max(MAX_DESCRIPTION_LENGTH, PRODUCT_VALIDATION_MESSAGES.description),
   });
+
+// Validates rows restored from localStorage, not user input.
+export const productRecordSchema: z.ZodType<ProductType> = z.object({
+  id: z.string(),
+  name: z.string(),
+  sku: z.string(),
+  category: z.enum(PRODUCT_CATEGORIES),
+  price: z.number().min(0),
+  stock: z.int().min(0),
+  status: z.enum(PRODUCT_STATUSES),
+  description: z.string(),
+  createdAt: z.iso.datetime(),
+});

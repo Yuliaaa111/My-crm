@@ -9,6 +9,7 @@ export type {
 export type {
   BadgeToneType,
   ButtonVariantType,
+  ComboboxOptionType,
   LoadStatusType,
   SelectOptionType,
 } from "./ui";

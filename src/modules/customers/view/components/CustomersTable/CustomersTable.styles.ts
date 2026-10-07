@@ -5,7 +5,7 @@ export const styles = (theme: AppThemeType): StyleConfigType => ({
   name: {
     fontWeight: theme.fonts.weights.medium,
   },
-  email: {
+  secondaryLine: {
     fontSize: theme.fonts.sizes.small,
     color: theme.colors.textSecondary,
   },

@@ -1,4 +1,5 @@
 import { mockRequest } from "@/core/api/mockRequest";
+import { createMockTable } from "@/core/api/mockTable";
 import {
   releaseProductsStock,
   reserveProductsStock,
@@ -15,6 +16,7 @@ import {
   STOCK_HOLDING_STATUSES,
 } from "./constants";
 import { MOCK_ORDERS } from "./mocks";
+import { orderRecordSchema } from "./schema";
 import type {
   OrderItemType,
   OrderRequest,
@@ -24,12 +26,16 @@ import type {
   OrderType,
 } from "./types";
 
-// In-memory stand-in for the backend table: changes live until the page
-// is reloaded, like in the original demo.
-let ordersTable: OrderType[] = [...MOCK_ORDERS];
+// Stand-in for the backend table, persisted to localStorage (see
+// core/api/mockTable.ts).
+const ordersTable = createMockTable({
+  tableName: "orders",
+  rowSchema: orderRecordSchema,
+  initialRows: MOCK_ORDERS,
+});
 
 const findOrderOrThrow = (orderId: string): OrderType => {
-  const order = ordersTable.find(({ id }) => id === orderId);
+  const order = ordersTable.readRows().find(({ id }) => id === orderId);
 
   if (!order) {
     throw new Error(ORDER_NOT_FOUND_MESSAGE);
@@ -42,17 +48,19 @@ const toStockChanges = (items: OrderItemType[]): StockChangeType[] =>
   items.map(({ productId, quantity }) => ({ productId, quantity }));
 
 const getNextOrderNumber = (): string => {
-  const lastNumber = ordersTable.reduce(
-    (maxNumber, { number }) =>
-      Math.max(maxNumber, Number(number.replace(ORDER_NUMBER_PREFIX, ""))),
-    FIRST_ORDER_NUMBER - 1,
-  );
+  const lastNumber = ordersTable
+    .readRows()
+    .reduce(
+      (maxNumber, { number }) =>
+        Math.max(maxNumber, Number(number.replace(ORDER_NUMBER_PREFIX, ""))),
+      FIRST_ORDER_NUMBER - 1,
+    );
 
   return `${ORDER_NUMBER_PREFIX}${lastNumber + 1}`;
 };
 
 export const fetchOrders = (): Promise<OrdersListResponse> =>
-  mockRequest(() => [...ordersTable]);
+  mockRequest(() => ordersTable.readRows());
 
 export const createOrder = (request: OrderRequest): Promise<OrderResponse> =>
   mockRequest(() => {
@@ -67,7 +75,7 @@ export const createOrder = (request: OrderRequest): Promise<OrderResponse> =>
       createdAt,
       statusHistory: [{ status: INITIAL_ORDER_STATUS, changedAt: createdAt }],
     };
-    ordersTable = [createdOrder, ...ordersTable];
+    ordersTable.writeRows([createdOrder, ...ordersTable.readRows()]);
 
     return createdOrder;
   });
@@ -95,8 +103,12 @@ export const updateOrderStatus = (
         { status, changedAt: new Date().toISOString() },
       ],
     };
-    ordersTable = ordersTable.map((existingOrder) =>
-      existingOrder.id === orderId ? updatedOrder : existingOrder,
+    ordersTable.writeRows(
+      ordersTable
+        .readRows()
+        .map((existingOrder) =>
+          existingOrder.id === orderId ? updatedOrder : existingOrder,
+        ),
     );
 
     return updatedOrder;
@@ -110,5 +122,7 @@ export const deleteOrder = (orderId: string): Promise<void> =>
       releaseProductsStock(toStockChanges(order.items));
     }
 
-    ordersTable = ordersTable.filter(({ id }) => id !== orderId);
+    ordersTable.writeRows(
+      ordersTable.readRows().filter(({ id }) => id !== orderId),
+    );
   });

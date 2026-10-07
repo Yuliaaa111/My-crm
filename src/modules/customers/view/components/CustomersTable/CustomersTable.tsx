@@ -32,7 +32,7 @@ export const CustomersTable = ({
       renderCell: (customer) => (
         <>
           <div className={css(styles.name)}>{customer.fullName}</div>
-          <div className={css(styles.email)}>{customer.email}</div>
+          <div className={css(styles.secondaryLine)}>{customer.email}</div>
         </>
       ),
     },
@@ -42,7 +42,16 @@ export const CustomersTable = ({
       header: "Компания",
       renderCell: ({ company }) => company || EMPTY_VALUE_PLACEHOLDER,
     },
-    { key: "city", header: "Город", renderCell: ({ city }) => city },
+    {
+      key: "location",
+      header: "Город и страна",
+      renderCell: ({ city, countryName }) => (
+        <>
+          <div>{city}</div>
+          <div className={css(styles.secondaryLine)}>{countryName}</div>
+        </>
+      ),
+    },
     {
       key: "status",
       header: "Статус",

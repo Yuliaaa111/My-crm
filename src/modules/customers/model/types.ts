@@ -10,13 +10,14 @@ export type CustomerType = {
   phone: string;
   company: string;
   city: string;
-  country: string;
+  countryCode: string;
   status: CustomerStatusType;
   createdAt: string;
 };
 
 export type CustomerViewType = CustomerType & {
   fullName: string;
+  countryName: string;
   location: string;
   createdAtLabel: string;
 };

@@ -1,10 +1,12 @@
 import { mockRequest } from "@/core/api/mockRequest";
+import { createMockTable } from "@/core/api/mockTable";
 import {
   buildInsufficientStockMessage,
   PRODUCT_NOT_FOUND_MESSAGE,
   PRODUCT_VALIDATION_MESSAGES,
 } from "./constants";
 import { MOCK_PRODUCTS } from "./mocks";
+import { productRecordSchema } from "./schema";
 import type {
   ProductRequest,
   ProductResponse,
@@ -13,12 +15,16 @@ import type {
   StockChangeType,
 } from "./types";
 
-// In-memory stand-in for the backend table: changes live until the page
-// is reloaded, like in the original demo.
-let productsTable: ProductType[] = [...MOCK_PRODUCTS];
+// Stand-in for the backend table, persisted to localStorage (see
+// core/api/mockTable.ts).
+const productsTable = createMockTable({
+  tableName: "products",
+  rowSchema: productRecordSchema,
+  initialRows: MOCK_PRODUCTS,
+});
 
 const findProductOrThrow = (productId: string): ProductType => {
-  const product = productsTable.find(({ id }) => id === productId);
+  const product = productsTable.readRows().find(({ id }) => id === productId);
 
   if (!product) {
     throw new Error(PRODUCT_NOT_FOUND_MESSAGE);
@@ -28,9 +34,9 @@ const findProductOrThrow = (productId: string): ProductType => {
 };
 
 const assertSkuIsFree = (sku: string, ownProductId?: string): void => {
-  const isSkuTaken = productsTable.some(
-    (product) => product.sku === sku && product.id !== ownProductId,
-  );
+  const isSkuTaken = productsTable
+    .readRows()
+    .some((product) => product.sku === sku && product.id !== ownProductId);
 
   if (isSkuTaken) {
     throw new Error(PRODUCT_VALIDATION_MESSAGES.skuTaken);
@@ -41,15 +47,17 @@ const applyStockChanges = (
   stockChanges: StockChangeType[],
   direction: 1 | -1,
 ): void => {
-  productsTable = productsTable.map((product) => {
-    const quantityChange = stockChanges
-      .filter(({ productId }) => productId === product.id)
-      .reduce((total, { quantity }) => total + quantity, 0);
+  productsTable.writeRows(
+    productsTable.readRows().map((product) => {
+      const quantityChange = stockChanges
+        .filter(({ productId }) => productId === product.id)
+        .reduce((total, { quantity }) => total + quantity, 0);
 
-    return quantityChange === 0
-      ? product
-      : { ...product, stock: product.stock + direction * quantityChange };
-  });
+      return quantityChange === 0
+        ? product
+        : { ...product, stock: product.stock + direction * quantityChange };
+    }),
+  );
 };
 
 // Server-side operations for the orders module. They run inside another
@@ -76,7 +84,7 @@ export const releaseProductsStock = (stockChanges: StockChangeType[]): void => {
 };
 
 export const fetchProducts = (): Promise<ProductsListResponse> =>
-  mockRequest(() => [...productsTable]);
+  mockRequest(() => productsTable.readRows());
 
 export const createProduct = (
   request: ProductRequest,
@@ -89,7 +97,7 @@ export const createProduct = (
       id: crypto.randomUUID(),
       createdAt: new Date().toISOString(),
     };
-    productsTable = [createdProduct, ...productsTable];
+    productsTable.writeRows([createdProduct, ...productsTable.readRows()]);
 
     return createdProduct;
   });
@@ -105,8 +113,12 @@ export const updateProduct = (
       ...findProductOrThrow(productId),
       ...request,
     };
-    productsTable = productsTable.map((product) =>
-      product.id === productId ? updatedProduct : product,
+    productsTable.writeRows(
+      productsTable
+        .readRows()
+        .map((product) =>
+          product.id === productId ? updatedProduct : product,
+        ),
     );
 
     return updatedProduct;
@@ -115,5 +127,7 @@ export const updateProduct = (
 export const deleteProduct = (productId: string): Promise<void> =>
   mockRequest(() => {
     findProductOrThrow(productId);
-    productsTable = productsTable.filter(({ id }) => id !== productId);
+    productsTable.writeRows(
+      productsTable.readRows().filter(({ id }) => id !== productId),
+    );
   });

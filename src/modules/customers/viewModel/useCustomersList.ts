@@ -5,6 +5,7 @@ import { ALL_FILTER_VALUE } from "@/core/constants/filters";
 import { ROUTES } from "@/core/constants/routes";
 import { usePagination } from "@/core/hooks/usePagination";
 import { buildDetailsPath } from "@/core/utils/buildDetailsPath";
+import { getCountryName } from "@/core/utils/countries";
 import { isOneOf } from "@/core/utils/isOneOf";
 import { matchesSearchQuery } from "@/core/utils/matchesSearchQuery";
 import { CUSTOMER_STATUS_FILTERS } from "../model/constants";
@@ -28,6 +29,8 @@ const filterCustomers = (
           customer.phone,
           customer.company,
           customer.city,
+          getCountryName(customer.countryCode),
+          customer.countryCode,
         ],
         searchQuery,
       ),

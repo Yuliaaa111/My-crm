@@ -59,7 +59,7 @@ export const CustomersListScreen = () => {
         <Toolbar>
           <Input
             type="search"
-            placeholder="Поиск по имени, email, телефону, компании или городу"
+            placeholder="Поиск по имени, email, телефону, компании, городу или стране"
             aria-label="Поиск клиентов"
             value={searchQuery}
             onChange={handleSearchChange}

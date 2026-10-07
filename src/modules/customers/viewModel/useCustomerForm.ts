@@ -4,6 +4,7 @@ import { useForm } from "react-hook-form";
 
 import { getErrorMessage } from "@/core/utils/getErrorMessage";
 import {
+  COUNTRY_OPTIONS,
   CUSTOMER_STATUS_OPTIONS,
   customerFormDefaultValues,
 } from "../model/constants";
@@ -23,6 +24,7 @@ export const useCustomerForm = (
   );
   const {
     register,
+    control,
     handleSubmit,
     formState: { errors, isSubmitting },
   } = useForm<CustomerRequest>({
@@ -48,6 +50,8 @@ export const useCustomerForm = (
 
   return {
     register,
+    control,
+    countryOptions: COUNTRY_OPTIONS,
     errors,
     isSubmitting,
     submitErrorMessage,

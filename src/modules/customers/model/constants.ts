@@ -1,5 +1,10 @@
 import { ALL_FILTER_VALUE } from "@/core/constants/filters";
-import type { BadgeToneType, SelectOptionType } from "@/core/types";
+import type {
+  BadgeToneType,
+  ComboboxOptionType,
+  SelectOptionType,
+} from "@/core/types";
+import { getCountryCodesByName, getCountryName } from "@/core/utils/countries";
 import type {
   CustomerRequest,
   CustomerStatusFilterType,
@@ -44,8 +49,25 @@ export const CUSTOMER_VALIDATION_MESSAGES = {
   email: "Введите корректный email",
   phone: "Введите телефон: от 7 цифр, допустимы +, пробелы, скобки и дефисы",
   city: "Введите город",
-  country: "Введите страну",
+  countryCode: "Выберите страну из списка",
 };
+
+export const DEFAULT_COUNTRY_CODE = "RU";
+
+// The value is the ISO code that gets stored; the label is the name shown
+// to the user. Both are searchable, so «RU» and «росс» find the same item.
+export const COUNTRY_OPTIONS: ComboboxOptionType[] = getCountryCodesByName(
+  DEFAULT_COUNTRY_CODE,
+).map((countryCode) => {
+  const countryName = getCountryName(countryCode);
+
+  return {
+    value: countryCode,
+    label: countryName,
+    description: countryCode,
+    searchValues: [countryName, countryCode],
+  };
+});
 
 export const customerFormDefaultValues: CustomerRequest = {
   firstName: "",
@@ -54,6 +76,6 @@ export const customerFormDefaultValues: CustomerRequest = {
   phone: "",
   company: "",
   city: "",
-  country: "Россия",
+  countryCode: DEFAULT_COUNTRY_CODE,
   status: "active",
 };
