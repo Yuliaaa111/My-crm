@@ -1,73 +1,134 @@
-# React + TypeScript + Vite
+# My CRM
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Упрощённая CRM по мотивам [harryho/react-crm](https://github.com/harryho/react-crm): вход, сводка с графиками, клиенты, товары и заказы. Код написан с нуля на собственной архитектуре, интерфейс на русском. Корзины, оплаты и доставки, в отличие от оригинала, нет. Бэкенда нет: все данные — моки, которые сохраняются в браузере.
 
-Currently, two official plugins are available:
+## Возможности
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- **Вход** по JWT-токену со сроком действия: защищённые страницы, выход по истечении срока, сессия переживает перезагрузку.
+- **Сводка:** выручка, заказы, активные клиенты, товары с малым остатком; графики заказов по месяцам и статусам и выручки по категориям; последние заказы.
+- **Клиенты, товары, заказы:** списки с поиском, фильтрами и пагинацией, карточки, создание, правка и удаление.
+- **Заказы:**
+  - позиции выбираются с поиском;
+  - смена статуса по шагам: «Новый → Оплачен → В работе → Отправлен → Доставлен» или «Отменён»;
+  - история статусов;
+  - на карточке клиента — список его заказов.
+- **Остатки:** заказ списывает товар со склада, больше остатка заказать нельзя, отмена возвращает товар.
+- **Темы:** светлая и тёмная; выбор запоминается.
 
-## React Compiler
+## Стек
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+| Задача            | Библиотека                                             |
+| ----------------- | ------------------------------------------------------ |
+| UI и сборка       | React 19, TypeScript 6, Vite 8                         |
+| Роутинг           | react-router-dom 7, маршруты из структуры папок `app/` |
+| Состояние         | zustand 5                                              |
+| Формы и валидация | react-hook-form 7, zod 4                               |
+| Стили             | @emotion/css, собственные компоненты и темы            |
+| Графики и иконки  | recharts 3, lucide-react                               |
+| Тесты             | Vitest 5, Testing Library, jsdom                       |
+| Качество кода     | ESLint 10, Prettier 3                                  |
 
-## Expanding the ESLint configuration
+## Быстрый старт
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+Нужен Node.js 20.19+ или 22.12+ — этого требует Vite 8.
 
-```js
-export default defineConfig([
-  globalIgnores(["dist"]),
-  {
-    files: ["**/*.{ts,tsx}"],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ["./tsconfig.node.json", "./tsconfig.app.json"],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-]);
+```bash
+npm install
+npm run dev
 ```
 
-You can also install [eslint-plugin-react-x](https://npmx.dev/package/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://npmx.dev/package/eslint-plugin-react-dom) for React-specific lint rules:
+Приложение откроется на http://localhost:5173.
 
-```js
-// eslint.config.js
-import reactX from "eslint-plugin-react-x";
-import reactDom from "eslint-plugin-react-dom";
+**Тестовый пользователь:**
 
-export default defineConfig([
-  globalIgnores(["dist"]),
-  {
-    files: ["**/*.{ts,tsx}"],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs["recommended-typescript"],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ["./tsconfig.node.json", "./tsconfig.app.json"],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-]);
+- логин: `demo@mycrm.test`
+- пароль: `demo12345`
+
+## Команды
+
+| Команда                           | Что делает                               |
+| --------------------------------- | ---------------------------------------- |
+| `npm run dev`                     | dev-сервер                               |
+| `npm run build`                   | проверка типов и сборка в `dist/`        |
+| `npm run preview`                 | просмотр собранной версии                |
+| `npm run test`                    | все тесты один раз                       |
+| `npm run test:watch`              | тесты с перезапуском при изменениях      |
+| `npm run typecheck`               | проверка типов                           |
+| `npm run lint` / `npm run format` | линтер / проверка форматирования         |
+| `npm run fix`                     | автоисправление линтера и форматирования |
+
+## Архитектура
+
+Модифицированный MVVM: зависимости идут в одну сторону, `view → viewModel → model`.
+
 ```
+src/
+├── app/       # маршруты: структура папок = структура URL
+├── core/      # общее для всех модулей
+└── modules/   # бизнес-модули: auth, dashboard, customers, products, orders
+```
+
+- **`app/`** — файловый роутинг по соглашениям Next.js. В `app/` только композиция, логики нет.
+  - `page.tsx` — страница, `layout.tsx` — обёртка;
+  - `[customerId]` — параметр, `(protected)` — группа без влияния на URL;
+  - страницы грузятся по требованию, отдельным файлом каждая.
+- **`core/`:**
+  - `api` — имитация запросов и хранение mock-данных;
+  - `stores` — сессия и тема;
+  - `routes` — сборка маршрутов и защита страниц;
+  - `ui` — компоненты: таблица, модальное окно, выпадающий список с поиском и другие;
+  - `layouts`, `styles`, `hooks`, `utils`, `constants`, `types`.
+- **`modules/<модуль>/`** — бизнес-модуль, разделённый на слои:
+
+| Слой      | Папка             | Что внутри                                                   |
+| --------- | ----------------- | ------------------------------------------------------------ |
+| Model     | `model/`          | типы, константы, zod-схемы, моки, API, стор — без React      |
+| ViewModel | `viewModel/`      | хуки: загрузка данных, фильтры, формы, обработчики — без JSX |
+| View      | `view/`           | экраны и компоненты — только отображение                     |
+| Public    | `public/index.ts` | единственная точка, через которую модуль доступен другим     |
+
+Модули связаны только через `public/index.ts`, циклов нет. Например, `orders` берёт клиентов и товары у `customers` и `products`, но не наоборот. Заказы на карточке клиента собираются в `app/`: модуль клиентов о заказах не знает.
+
+Подробные правила — в `.claude/rules/` и `.claude/CLAUDE.md`.
+
+## Данные: моки и настоящий бэкенд
+
+Сейчас бэкенд имитирует слой `model/<модуль>Api.ts`:
+
+- асинхронные функции с задержкой ~400 мс: `fetchCustomers`, `createOrder` и другие;
+- «таблицы» хранятся в памяти и в `localStorage`, поэтому изменения переживают перезагрузку;
+- при загрузке данные проверяются zod-схемой; испорченные или устаревшие заменяются исходными моками из `model/mocks.ts`;
+- остатки, номера заказов и допустимые переходы статусов проверяет сам mock-API — так, как это делал бы сервер;
+- JWT-токен собирается на клиенте; подпись ненастоящая, это имитация формата.
+
+**Сбросить данные к исходным мокам:** в DevTools → Application → Local Storage удалить ключи `my-crm-mock:…` и перезагрузить страницу. Чтобы сброс произошёл у всех, нужно повысить `MOCK_STORAGE_VERSION` в `src/core/constants/mockStorage.ts`.
+
+**С настоящим бэкендом** меняются только `model/*Api.ts` и `core/api`; viewModel и view остаются как есть — они не знают, откуда данные.
+
+- **Запросы:** функции `model/*Api.ts` сохраняют сигнатуры (`Request` → `Promise<Response>`), но внутри обращаются к серверу через общий HTTP-клиент в `core/api`. Удаляются `mockRequest`, `mockTable` и `mocks.ts`.
+- **Вход:** токен выдаёт и подписывает сервер. Клиент только хранит токен, подставляет его в запросы, обновляет по refresh-токену и выходит при ответе 401.
+- **Остатки:** списание и возврат делает сервер в одной транзакции с заказом. «Серверные» функции товаров, которые сейчас вызывает mock-API заказов, исчезают.
+- **Данные:** справочные значения, например страна клиента, хранятся кодом ISO 3166-1, так что формат данных менять не придётся.
+
+## Тесты
+
+```bash
+npm run test
+```
+
+Тесты лежат в `src/tests/`, структура повторяет `src/`. Они проверяют:
+
+- утилиты;
+- mock-API: CRUD, остатки, сохранение и откат данных;
+- схемы форм и расчёты сводки;
+- сторы и хуки viewModel;
+- выпадающий список с поиском — клавиатура и ARIA;
+- экраны: вход, защиту маршрутов, клиентов и создание заказа.
+
+Как устроены тесты — в разделе «Тесты» файла `.claude/CLAUDE.md`.
+
+## Процесс разработки
+
+Проект собирался по согласованному плану из 8 этапов, от настройки инструментов до тестов. План со всеми решениями, их датами и изменениями по ходу работы хранится как история: [`.claude/plans/crm-implementation.md`](.claude/plans/crm-implementation.md).
+
+Git-флоу: `main` ← `develop` ← `feature/*`. Каждая задача — в своей ветке от `develop`, после проверки ветка вливается обратно в `develop`. Напрямую в `main` не коммитим.
