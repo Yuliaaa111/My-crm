@@ -26,6 +26,11 @@ export type ProductViewType = ProductType & {
   createdAtLabel: string;
 };
 
+export type StockChangeType = {
+  productId: string;
+  quantity: number;
+};
+
 export type ProductRequest = Omit<ProductType, "id" | "createdAt">;
 
 export type ProductResponse = ProductType;

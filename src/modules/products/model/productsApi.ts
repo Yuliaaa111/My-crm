@@ -1,5 +1,6 @@
 import { mockRequest } from "@/core/api/mockRequest";
 import {
+  buildInsufficientStockMessage,
   PRODUCT_NOT_FOUND_MESSAGE,
   PRODUCT_VALIDATION_MESSAGES,
 } from "./constants";
@@ -9,6 +10,7 @@ import type {
   ProductResponse,
   ProductsListResponse,
   ProductType,
+  StockChangeType,
 } from "./types";
 
 // In-memory stand-in for the backend table: changes live until the page
@@ -33,6 +35,44 @@ const assertSkuIsFree = (sku: string, ownProductId?: string): void => {
   if (isSkuTaken) {
     throw new Error(PRODUCT_VALIDATION_MESSAGES.skuTaken);
   }
+};
+
+const applyStockChanges = (
+  stockChanges: StockChangeType[],
+  direction: 1 | -1,
+): void => {
+  productsTable = productsTable.map((product) => {
+    const quantityChange = stockChanges
+      .filter(({ productId }) => productId === product.id)
+      .reduce((total, { quantity }) => total + quantity, 0);
+
+    return quantityChange === 0
+      ? product
+      : { ...product, stock: product.stock + direction * quantityChange };
+  });
+};
+
+// Server-side operations for the orders module. They run inside another
+// mock request, so they are synchronous: the whole order either reserves
+// every item or fails without changing any stock.
+export const reserveProductsStock = (stockChanges: StockChangeType[]): void => {
+  stockChanges.forEach(({ productId, quantity }) => {
+    const product = findProductOrThrow(productId);
+
+    if (product.stock < quantity) {
+      throw new Error(
+        buildInsufficientStockMessage(product.name, product.stock),
+      );
+    }
+  });
+
+  applyStockChanges(stockChanges, -1);
+};
+
+// Products deleted after the order was placed are skipped: there is no
+// stock left to return them to.
+export const releaseProductsStock = (stockChanges: StockChangeType[]): void => {
+  applyStockChanges(stockChanges, 1);
 };
 
 export const fetchProducts = (): Promise<ProductsListResponse> =>

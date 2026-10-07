@@ -5,7 +5,7 @@ import { getErrorMessage } from "@/core/utils/getErrorMessage";
 import { fetchProducts } from "../model/productsApi";
 import { useProductsStore } from "../model/productsStore";
 
-const loadProducts = async (): Promise<void> => {
+export const loadProducts = async (): Promise<void> => {
   const { startLoading, setProducts, setLoadError } =
     useProductsStore.getState();
 

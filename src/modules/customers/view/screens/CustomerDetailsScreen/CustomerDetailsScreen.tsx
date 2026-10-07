@@ -1,4 +1,6 @@
+import { css } from "@emotion/css";
 import { ArrowLeft, Pencil, Trash2 } from "lucide-react";
+import type { ReactNode } from "react";
 
 import { EMPTY_VALUE_PLACEHOLDER } from "@/core/constants/app";
 import { ICON_SIZE } from "@/core/constants/layout";
@@ -15,7 +17,16 @@ import { useCustomerDetails } from "../../../viewModel/useCustomerDetails";
 import { CustomerFormModal } from "../../components/CustomerFormModal/CustomerFormModal";
 import { CustomerStatusBadge } from "../../components/CustomerStatusBadge/CustomerStatusBadge";
 
-export const CustomerDetailsScreen = () => {
+import { useStyles } from "./CustomerDetailsScreen.styles";
+
+type CustomerDetailsScreenProps = {
+  renderRelatedSections?: (customerId: string) => ReactNode;
+};
+
+export const CustomerDetailsScreen = ({
+  renderRelatedSections,
+}: CustomerDetailsScreenProps) => {
+  const styles = useStyles();
   const {
     customer,
     isLoading,
@@ -78,20 +89,23 @@ export const CustomerDetailsScreen = () => {
           </>
         }
       />
-      <Card>
-        <DescriptionList
-          items={[
-            { label: "Email", value: customer.email },
-            { label: "Телефон", value: customer.phone },
-            {
-              label: "Компания",
-              value: customer.company || EMPTY_VALUE_PLACEHOLDER,
-            },
-            { label: "Город и страна", value: customer.location },
-            { label: "Клиент с", value: customer.createdAtLabel },
-          ]}
-        />
-      </Card>
+      <div className={css(styles.sections)}>
+        <Card>
+          <DescriptionList
+            items={[
+              { label: "Email", value: customer.email },
+              { label: "Телефон", value: customer.phone },
+              {
+                label: "Компания",
+                value: customer.company || EMPTY_VALUE_PLACEHOLDER,
+              },
+              { label: "Город и страна", value: customer.location },
+              { label: "Клиент с", value: customer.createdAtLabel },
+            ]}
+          />
+        </Card>
+        {renderRelatedSections?.(customer.id)}
+      </div>
       {isFormOpen ? (
         <CustomerFormModal editingCustomer={customer} onClose={closeForm} />
       ) : null}

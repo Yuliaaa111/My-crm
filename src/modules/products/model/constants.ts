@@ -75,6 +75,12 @@ export const PRODUCT_CATEGORY_FILTER_OPTIONS: SelectOptionType[] = [
 ];
 
 export const PRODUCT_NOT_FOUND_MESSAGE = "Товар не найден";
+
+export const buildInsufficientStockMessage = (
+  productName: string,
+  availableStock: number,
+): string =>
+  `Недостаточно товара «${productName}» на складе: доступно ${availableStock} шт.`;
 export const SKU_PATTERN = /^[A-Z0-9-]{3,20}$/;
 export const MAX_DESCRIPTION_LENGTH = 500;
 
