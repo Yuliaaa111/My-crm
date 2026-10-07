@@ -70,7 +70,7 @@ src/
 │           ├── page.tsx                  # /orders
 │           └── [orderId]/
 │               └── page.tsx              # /orders/:orderId
-├── tests/                # зарезервировано под тесты (пока не используется)
+├── tests/                # тесты Vitest, повторяют структуру src/ (см. «Тесты» в CLAUDE.md)
 ├── core/                 # общая инфраструктура, шарится между модулями
 │   ├── api/
 │   │   ├── mockRequest.ts

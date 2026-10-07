@@ -20,9 +20,21 @@ npm run lint:fix      # eslint . --fix
 npm run format        # prettier . --check
 npm run format:write  # prettier . --write
 npm run fix           # lint:fix + format:write
+npm run test          # vitest run — все тесты один раз
+npm run test:watch    # vitest — перезапуск тестов при изменениях
 ```
 
-Тест-раннер пока не настроен (появится на последнем этапе плана). Stop-хук `.claude/hooks/enforce-typecheck.sh` запускает `npm run typecheck` перед завершением ответа.
+Stop-хук `.claude/hooks/enforce-typecheck.sh` запускает `npm run typecheck` перед завершением ответа.
+
+## Тесты
+
+Vitest + Testing Library (jsdom). Запуск — `npm run test`, один файл — `npx vitest run src/tests/core/utils/jwt.test.ts`, по имени теста — `npx vitest run -t "Combobox"`. Конфиг — `vitest.config.ts`, он поверх `vite.config.ts`, поэтому в тестах работает алиас `@/`.
+
+- Тесты лежат в `src/tests/` и повторяют структуру `src/` (`src/tests/core/utils/jwt.test.ts`, `src/tests/modules/orders/ordersApi.test.ts`), файлы — `*.test.ts` / `*.test.tsx`. На тестовый код действуют те же правила линтера, что и на основной.
+- `src/tests/setup.ts` для всех тестов: подключает матчеры jest-dom, после каждого теста очищает DOM и `localStorage`, заменяет `mockRequest` версией без задержки в 400 мс (тест самого `mockRequest` возвращает настоящий через `vi.unmock`), подставляет `scrollIntoView`, которого нет в jsdom.
+- Mock-таблицы и сторы живут в памяти модулей. Чтобы тесты не влияли друг на друга, тест, которому нужен «чистый бэкенд», вызывает `vi.resetModules()` и импортирует модули динамически: `loadFreshApis()` из `src/tests/helpers/loadModules.ts` для API, `await import(...)` для экранов и хуков. Так же проверяется «перезагрузка страницы»: данные пишутся в `localStorage`, модули загружаются заново.
+- Хелперы в `src/tests/helpers/`: `renderWithRouter` (data router с заглушками страниц, чтобы проверить, куда ушёл пользователь), `RouterWrapper` для `renderHook`, `createTestToken` / `storeSession` для сессии, `normalizeSpaces` для сумм и дат из `Intl` (там неразрывные пробелы).
+- Действия пользователя — через `@testing-library/user-event`, поиск элементов — по ролям и подписям (`getByRole("combobox", { name: "Клиент" })`), как их видит экранная читалка.
 
 ## Архитектура
 
